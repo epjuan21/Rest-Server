@@ -1,4 +1,5 @@
 const { Schema, model } = require('mongoose');
+const bcrypt = require('bcrypt');
 
 const UserSchema = new Schema({
     name: {
@@ -32,8 +33,14 @@ const UserSchema = new Schema({
     }
 });
 
+// Comparar Contraseñas
+UserSchema.statics.comparePassword = async(password, recivedPassword) => {
+    return await bcrypt.compareSync(password, recivedPassword);
+}
+
 UserSchema.methods.toJSON = function() {
     const { __v, _id, password, ...user } = this.toObject();
+    user.uid = _id;
     return user;
 }
 
