@@ -1,4 +1,6 @@
+const { json } = require("express/lib/response");
 const { generateToken } = require("../helpers/generateJWT");
+const { googleVerify } = require("../helpers/googleVerify");
 const User = require("../models/user");
 
 const login = async (req, res) => {
@@ -45,6 +47,52 @@ const login = async (req, res) => {
     }
 }
 
+const googleSignIn = async (req, res) => {
+    
+    const { id_token } = req.body;
+
+    try {
+
+        const { name, avatar, email } = await googleVerify(id_token);
+        
+        let usuario = await User.findOne({ email });
+
+        if (!usuario) {
+            const data = {
+                name,
+                email,
+                avatar,
+                password: ':)',
+                google: true,
+            }
+
+            usuario = new User(data);
+            await usuario.save();
+        }
+
+        // Si el usuario esta inactivo
+        if (!usuario.status) {
+            return res.status(400).json({
+                msg: 'User is not active'
+            });
+        }
+
+        // Generar el JWT
+        const token = await generateToken(usuario.id);
+
+        res.json({
+            msg: 'Sign in successfully',
+            usuario,
+            token
+        })
+    } catch (error) {
+        res.status(400).json({
+            error: 'Invalid token'
+        });
+    }
+}
+
 module.exports = {
-    login
+    login,
+    googleSignIn
 }
