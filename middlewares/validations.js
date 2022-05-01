@@ -1,7 +1,6 @@
 const { validationResult } = require("express-validator");
 const jwt = require('jsonwebtoken');
-const Role = require('../models/role');
-const User = require("../models/user");
+const { Category, Role, User, Product } = require("../models");
 
 const validateUserItems = (req, res, next) => {
     const errors = validationResult(req);
@@ -106,6 +105,22 @@ const hasRole = ( ...roles ) => {
     }
 }
 
+// Validar que la categoria exista
+const categoryExist = async(id = '') => {
+    const category = await Category.findById(id);
+    if (!category) {
+        throw new Error('Category does not exist');
+    }
+}
+
+// Validar que el producto exista
+const productExist = async(id = '') => {
+    const product = await Product.findById(id);
+    if (!product) {
+        throw new Error('Product does not exist');
+    }
+}
+
 module.exports = {
     validateUserItems,
     roleValidator,
@@ -113,5 +128,7 @@ module.exports = {
     userExist,
     validateJWT,
     validateRoleAdmin,
-    hasRole
+    hasRole,
+    categoryExist,
+    productExist
 }
